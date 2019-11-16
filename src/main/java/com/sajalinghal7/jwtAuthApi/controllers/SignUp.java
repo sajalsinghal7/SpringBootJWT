@@ -1,14 +1,14 @@
 package com.sajalinghal7.jwtAuthApi.controllers;
 
-import com.sajalinghal7.jwtAuthApi.models.AuthenticationRequest;
+import com.sajalinghal7.jwtAuthApi.entities.UserData;
 import com.sajalinghal7.jwtAuthApi.models.AuthenticationResponse;
+import com.sajalinghal7.jwtAuthApi.models.UserDataPOJO;
 import com.sajalinghal7.jwtAuthApi.services.SajalUserDetailsService;
+import com.sajalinghal7.jwtAuthApi.services.UserDataService;
 import com.sajalinghal7.jwtAuthApi.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class Authenticate {
+public class SignUp {
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -27,21 +27,23 @@ public class Authenticate {
     @Autowired
     private SajalUserDetailsService sajalUserDetailsService;
 
-    @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authenticationRequest) throws Exception {
+    @Autowired
+    private UserDataService userDataService;
 
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authenticationRequest.getEmail(), authenticationRequest.getPassword())
-            );
-        }
-        catch (BadCredentialsException e) {
-            throw new Exception("Incorrect username or password", e);
+    @RequestMapping(value = "/signUp", method = RequestMethod.POST)
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody UserDataPOJO userDataPOJO) throws Exception {
+
+        UserData userData = userDataService.getPersonByEmail(userDataPOJO.getEmail());
+        if(userData == null) {
+            UserData newUser = new UserData(userDataPOJO.getEmail(), userDataPOJO.getPassword(), userDataPOJO.getName());
+            userDataService.saveOrUpdate(newUser);
+        } else {
+            throw new Exception("User Already Exists");
         }
 
 
         final UserDetails userDetails = sajalUserDetailsService
-                .loadUserByUsername(authenticationRequest.getEmail());
+                .loadUserByUsername(userDataPOJO.getEmail());
 
         final String jwt = jwtTokenUtil.generateToken(userDetails);
 

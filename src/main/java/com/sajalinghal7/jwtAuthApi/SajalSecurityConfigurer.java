@@ -33,8 +33,9 @@ public class SajalSecurityConfigurer extends WebSecurityConfigurerAdapter {
         httpSecurity
                 .csrf().disable()
                 .authorizeRequests()
-                .antMatchers("/authenticate").permitAll()
+                .antMatchers("/authenticate/**").permitAll()
                 .antMatchers("/h2-console/**").permitAll()
+                .antMatchers("/signUp/**").permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .exceptionHandling()
